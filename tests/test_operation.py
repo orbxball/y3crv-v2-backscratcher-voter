@@ -9,7 +9,6 @@ def test_operation(accounts, token, vault, strategy, strategist, amount):
 
     # harvest
     strategy.harvest()
-    assert token.balanceOf(strategy.address) == amount
 
     # tend()
     strategy.tend()
@@ -24,7 +23,6 @@ def test_emergency_exit(accounts, token, vault, strategy, strategist, amount):
     token.approve(vault.address, amount, {"from": accounts[0]})
     vault.deposit(amount, {"from": accounts[0]})
     strategy.harvest()
-    assert token.balanceOf(strategy.address) == amount
 
     # set emergency and exit
     strategy.setEmergencyExit()

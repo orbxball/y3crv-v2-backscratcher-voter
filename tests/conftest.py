@@ -1,26 +1,28 @@
 import pytest
-from brownie import config
-from brownie import Contract
+from brownie import config, Wei, Contract
 
 
 @pytest.fixture
 def gov(accounts):
-    yield accounts[0]
+    # ychad.eth
+    yield accounts.at('0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52', force=True)
 
 
 @pytest.fixture
-def rewards(accounts):
-    yield accounts[1]
+def rewards(gov):
+    yield gov  # TODO: Add rewards contract
 
 
 @pytest.fixture
 def guardian(accounts):
-    yield accounts[2]
+    # dev.ychad.eth
+    yield accounts.at('0x846e211e8ba920B353FB717631C015cf04061Cc9', force=True)
 
 
 @pytest.fixture
 def management(accounts):
-    yield accounts[3]
+    # dev.ychad.eth
+    yield accounts.at('0x846e211e8ba920B353FB717631C015cf04061Cc9', force=True)
 
 
 @pytest.fixture
@@ -40,12 +42,11 @@ def token():
 
 
 @pytest.fixture
-def amount(accounts, token):
+def amount(accounts, token, whale):
     amount = 10_000 * 10 ** token.decimals()
     # In order to get some funds for the token you are about to use,
     # it impersonate an exchange address to use it's funds.
-    reserve = accounts.at("0x5c00977a2002a3C9925dFDfb6815765F578a804f", force=True)
-    token.transfer(accounts[0], amount, {"from": reserve})
+    reserve = whale
     yield amount
 
 
@@ -60,15 +61,39 @@ def vault(pm, gov, rewards, guardian, management, token):
 
 
 @pytest.fixture
-def strategy(accounts, strategist, keeper, vault, Strategy, gov):
+def strategy(accounts, strategist, keeper, vault, Strategy, gov, token):
     strategy = strategist.deploy(Strategy, vault)
     strategy.setKeeper(keeper)
-    vault.addStrategy(strategy, 10_000, 0, 1_000, {"from": gov})
+    vault.addStrategy(strategy, 9_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
+
+    proxy = Contract("0x9a165622a744C20E3B2CB443AeD98110a33a231b", owner=gov)
+    voter = Contract(proxy.proxy(), owner=gov)
+    gauge = Contract(strategy.gauge())
+
+    # remove the current strategy from gauge
+    data = vault.withdraw.encode_input(gauge.balanceOf(voter)) # just use the vault interface
+    voter.execute(gauge, 0, data, {"from": gov})
+
+    # transfer token from voter to other place
+    data = token.transfer.encode_input(keeper, token.balanceOf(voter))
+    voter.execute(token, 0, data)
+    assert token.balanceOf(voter) == 0
+    assert gauge.balanceOf(voter) == 0
 
     # proxy add
-    gov = accounts.at("0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", force=True)
-    proxy = Contract("0x9a3a03C614dc467ACC3e81275468e033c98d960E", owner=gov)
-    gauge = strategy.gauge()
     proxy.approveStrategy(gauge, strategy)
 
     yield strategy
+
+
+@pytest.fixture
+def whale(accounts):
+    # binance7 wallet
+    # acc = accounts.at('0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8', force=True)
+
+    # binance8 wallet
+    #acc = accounts.at('0xf977814e90da44bfa03b6295a0616a897441acec', force=True)
+
+    # veCRV DAO yVault
+    acc = accounts.at('0xc5bDdf9843308380375a611c18B50Fb9341f502A', force=True)
+    yield acc

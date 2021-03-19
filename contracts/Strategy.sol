@@ -179,7 +179,7 @@ contract Strategy is BaseStrategy {
             path[1] = weth;
             path[2] = dai;
 
-            Uni(dex).swapExactTokensForTokens(_crv, uint256(0), path, address(this), now.add(1800));
+            Uni(dex).swapExactTokensForTokens(_crv, uint256(0), path, address(this), now);
         }
         uint256 _dai = IERC20(dai).balanceOf(address(this));
         if (_dai > 0) {
@@ -227,8 +227,6 @@ contract Strategy is BaseStrategy {
 
     function prepareMigration(address _newStrategy) internal override {
         IVoterProxy(proxy).withdrawAll(gauge, address(want));
-        uint256 _balance = want.balanceOf(address(this));
-        want.safeTransfer(_newStrategy, _balance);
     }
 
     function protectedTokens()
@@ -237,9 +235,8 @@ contract Strategy is BaseStrategy {
         override
         returns (address[] memory)
     {
-        address[] memory protected = new address[](2);
+        address[] memory protected = new address[](1);
         protected[0] = crv;
-        protected[1] = dai;
         return protected;
     }
 }

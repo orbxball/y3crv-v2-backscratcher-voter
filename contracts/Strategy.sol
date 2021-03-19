@@ -99,7 +99,7 @@ interface IVoterProxy {
 }
 
 
-contract Strategy is BaseStrategy {
+contract CurveVoterProxy is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
@@ -128,10 +128,6 @@ contract Strategy is BaseStrategy {
         profitFactor = 1000;
         debtThreshold = 1e24;
         proxy = address(0x9a165622a744C20E3B2CB443AeD98110a33a231b);
-        dex = sushiswap;
-        curve = address(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
-        gauge = address(0xbFcF63294aD7105dEa65aA58F8AE5BE2D9d0952A);
-        keepCRV = 1000;
     }
 
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
@@ -236,6 +232,72 @@ contract Strategy is BaseStrategy {
     function prepareMigration(address _newStrategy) internal override {
         IVoterProxy(proxy).withdrawAll(gauge, address(want));
     }
+
+    function protectedTokens()
+        internal
+        view
+        override
+        returns (address[] memory)
+    {
+        address[] memory protected = new address[](1);
+        protected[0] = crv;
+        return protected;
+    }
+}
+
+contract Strategy is CurveVoterProxy {
+    using SafeERC20 for IERC20;
+    using Address for address;
+    using SafeMath for uint256;
+
+    constructor(address _vault) public CurveVoterProxy(_vault) {
+        dex = sushiswap;
+        curve = address(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
+        gauge = address(0xbFcF63294aD7105dEa65aA58F8AE5BE2D9d0952A);
+        keepCRV = 1000;
+    }
+
+    function prepareReturn(uint256 _debtOutstanding)
+        internal
+        override
+        returns (
+            uint256 _profit,
+            uint256 _loss,
+            uint256 _debtPayment
+        )
+    {
+        IVoterProxy(proxy).harvest(gauge);
+        uint256 _crv = IERC20(crv).balanceOf(address(this));
+        if (_crv > 0) {
+            uint256 _keepCRV = _crv.mul(keepCRV).div(FEE_DENOMINATOR);
+            IERC20(crv).safeTransfer(voter, _keepCRV);
+            _crv = _crv.sub(_keepCRV);
+
+            IERC20(crv).safeApprove(dex, 0);
+            IERC20(crv).safeApprove(dex, _crv);
+
+            address[] memory path = new address[](3);
+            path[0] = crv;
+            path[1] = weth;
+            path[2] = dai;
+
+            Uni(dex).swapExactTokensForTokens(_crv, uint256(0), path, address(this), now);
+        }
+        uint256 _dai = IERC20(dai).balanceOf(address(this));
+        if (_dai > 0) {
+            IERC20(dai).safeApprove(curve, 0);
+            IERC20(dai).safeApprove(curve, _dai);
+            ICurveFi(curve).add_liquidity([_dai, 0, 0], 0);
+        }
+
+        _profit = want.balanceOf(address(this));
+
+        if (_debtOutstanding > 0) {
+            _debtPayment = _withdrawSome(_debtOutstanding);
+        }
+    }
+
+    // NOTE: Can override `tendTrigger` and `harvestTrigger` if necessary
 
     function protectedTokens()
         internal

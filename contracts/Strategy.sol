@@ -101,7 +101,8 @@ contract Strategy is BaseStrategy {
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     address public constant dai = address(0x6B175474E89094C44Da98b954EedeAC495271d0F);
-    address public constant weth = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // used for crv <> weth <> dai route
+    address public constant weth = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address public constant wbtc = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
 
     address public constant uniswap = address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     address public constant sushiswap = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);

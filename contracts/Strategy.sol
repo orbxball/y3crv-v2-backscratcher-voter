@@ -173,7 +173,6 @@ contract Strategy is BaseStrategy {
             want.safeTransfer(proxy, _want);
             IVoterProxy(proxy).deposit(gauge, address(want));
         }
-        IVoterProxy(proxy).lock();
     }
 
     function _withdrawSome(uint256 _amount) internal returns (uint256) {

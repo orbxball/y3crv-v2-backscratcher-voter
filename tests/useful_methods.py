@@ -8,6 +8,7 @@ def state_of_strategy(strategy, currency, vault):
     print(f"Strategy Debt Ratio: {state['debtRatio']}")
     print(f"Total Strategy Gain: {state['totalGain'] / scale}")
     print(f"Total Strategy Loss: {state['totalLoss'] / scale}")
+    print(f"Balance in gauge: {strategy.balanceOfPool() / scale}")
     print("Harvest Trigger:", strategy.harvestTrigger(1000000 * 30 * 1e9))
     print("Tend Trigger:", strategy.tendTrigger(1000000 * 30 * 1e9))
     print("Emergency Exit:", strategy.emergencyExit())
@@ -19,3 +20,4 @@ def state_of_vault(vault, currency):
     print(f"Total Assets: {vault.totalAssets() / scale}")
     print(f"Loose balance in vault: {currency.balanceOf(vault) / scale}")
     print(f"Total Debt: {vault.totalDebt() / scale}")
+    print(f"price per share: {vault.pricePerShare() / scale}")

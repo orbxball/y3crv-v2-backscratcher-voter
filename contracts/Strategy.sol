@@ -14,6 +14,22 @@ import {
     Address
 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
+interface IERC20Metadata {
+    /**
+     * @dev Returns the name of the token.
+     */
+    function name() external view returns (string memory);
+
+    /**
+     * @dev Returns the symbol of the token.
+     */
+    function symbol() external view returns (string memory);
+
+    /**
+     * @dev Returns the decimals places of the token.
+     */
+    function decimals() external view returns (uint8);
+}
 
 interface Uni {
     function swapExactTokensForTokens(
@@ -53,8 +69,6 @@ contract Strategy is BaseStrategy {
     using Address for address;
     using SafeMath for uint256;
 
-    address public constant curve = address(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
-    address public constant gauge = address(0xbFcF63294aD7105dEa65aA58F8AE5BE2D9d0952A);
     address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934);
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
@@ -64,11 +78,13 @@ contract Strategy is BaseStrategy {
     address public constant uniswap = address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     address public constant sushiswap = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
 
-    uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
 
     address public proxy;
     address public dex;
+    address public curve;
+    address public gauge;
+    uint256 public keepCRV;
 
     constructor(address _vault) public BaseStrategy(_vault) {
         minReportDelay = 12 hours;
@@ -77,6 +93,9 @@ contract Strategy is BaseStrategy {
         debtThreshold = 1e24;
         proxy = address(0x9a165622a744C20E3B2CB443AeD98110a33a231b);
         dex = sushiswap;
+        curve = address(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
+        gauge = address(0xbFcF63294aD7105dEa65aA58F8AE5BE2D9d0952A);
+        keepCRV = 1000;
     }
 
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
@@ -88,15 +107,12 @@ contract Strategy is BaseStrategy {
     }
 
     function switchDex(bool isUniswap) external onlyAuthorized {
-        if (isUniswap) {
-            dex = uniswap;
-        } else {
-            dex = sushiswap;
-        }
+        if (isUniswap) dex = uniswap;
+        else dex = sushiswap;
     }
 
     function name() external view override returns (string memory) {
-        return "StrategyCurve3CRVVoterProxy";
+        return string(abi.encodePacked("Curve", IERC20Metadata(address(want)).symbol(), "VoterProxy"));
     }
 
     function balanceOfWant() public view returns (uint256) {

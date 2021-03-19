@@ -53,7 +53,8 @@ def test_operation(web3, chain, vault, strategy, token, whale, gov, strategist, 
     print()
     print(f"rewards+strategist withdraw")
     vault.withdraw({"from": rewards})
-    vault.withdraw({"from": strategy}) # strategist rewards are on the strategy
+    vault.transfer(strategist, vault.balanceOf(strategy), {"from": strategy})
+    vault.withdraw({"from": strategist})
 
     print(f"\n****** State ******")
     state_of_strategy(strategy, token, vault)

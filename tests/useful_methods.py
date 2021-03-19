@@ -20,4 +20,5 @@ def state_of_vault(vault, currency):
     print(f"Total Assets: {vault.totalAssets() / scale}")
     print(f"Loose balance in vault: {currency.balanceOf(vault) / scale}")
     print(f"Total Debt: {vault.totalDebt() / scale}")
-    print(f"price per share: {vault.pricePerShare() / scale}")
+    print(f"Price per share: {vault.pricePerShare() / scale}")
+    print(f"Vault share totalSupply: {vault.totalSupply() / scale}")

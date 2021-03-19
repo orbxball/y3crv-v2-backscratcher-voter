@@ -3,7 +3,7 @@ from useful_methods import state_of_vault, state_of_strategy
 import brownie
 
 
-def test_operation(web3, chain, vault, strategy, token, whale, gov, amount):
+def test_operation(web3, chain, vault, strategy, token, whale, gov, strategist, rewards, amount):
     scale = 10 ** token.decimals()
     # Deposit to the vault
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
@@ -48,6 +48,12 @@ def test_operation(web3, chain, vault, strategy, token, whale, gov, amount):
     print(f"withdraw amount: {(token.balanceOf(whale)-before)/scale}")
     print(f"shares amount: {vault.balanceOf(whale)/scale}")
     assert token.balanceOf(whale) != 0
+
+    # all withdraw
+    print()
+    print(f"rewards+strategist withdraw")
+    vault.withdraw({"from": rewards})
+    vault.withdraw({"from": strategy}) # strategist rewards are on the strategy
 
     print(f"\n****** State ******")
     state_of_strategy(strategy, token, vault)

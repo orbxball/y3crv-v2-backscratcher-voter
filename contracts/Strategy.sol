@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 
-// Feel free to change this version of Solidity. We support >=0.6.0 <0.7.0;
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-// These are the core Yearn libraries
 import {
     BaseStrategy,
     StrategyParams
@@ -16,7 +14,7 @@ import {
     Address
 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-// Import interfaces for many popular DeFi projects, or add your own!
+
 interface Uni {
     function swapExactTokensForTokens(
         uint256,
@@ -49,6 +47,7 @@ interface IVoterProxy {
     function revokeStrategy(address) external;
 }
 
+
 contract Strategy is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
@@ -72,11 +71,11 @@ contract Strategy is BaseStrategy {
     address public dex;
 
     constructor(address _vault) public BaseStrategy(_vault) {
-        // You can set these parameters on deployment to whatever you want
-        // maxReportDelay = 6300;
+        minReportDelay = 12 hours;
+        maxReportDelay = 3 days;
         profitFactor = 1000;
-        // debtThreshold = 0;
-        proxy = address(0x9a3a03C614dc467ACC3e81275468e033c98d960E);
+        debtThreshold = 1e24;
+        proxy = address(0x9a165622a744C20E3B2CB443AeD98110a33a231b);
         dex = sushiswap;
     }
 

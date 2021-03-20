@@ -110,6 +110,18 @@ def strategy(accounts, strategist, keeper, vault, Strategy, gov, token):
 
 
 @pytest.fixture
+def strategy2(accounts, strategist, keeper, vault, Strategy, gov, token):
+    strategy = Strategy.deploy(vault, {"from": strategist})
+    strategy.setKeeper(keeper)
+    vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
+
+    # proxy add
+    proxy.approveStrategy(strategy.gauge(), strategy)
+
+    yield strategy
+
+
+@pytest.fixture
 def whale(accounts):
     # binance7 wallet
     # acc = accounts.at('0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8', force=True)

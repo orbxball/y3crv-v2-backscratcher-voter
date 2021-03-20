@@ -114,7 +114,7 @@ abstract contract CurveVoterProxy is BaseStrategy {
     address public constant uniswap = address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     address public constant sushiswap = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
 
-    uint256 public constant FEE_DENOMINATOR = 10000;
+    uint256 public constant DENOMINATOR = 10000;
 
     address public proxy;
     address public dex;
@@ -213,10 +213,12 @@ contract Strategy is CurveVoterProxy {
             uint256 _debtPayment
         )
     {
+        // default tokens: weth, wbtc, dai
+        // can add tokens here if needed
         IVoterProxy(proxy).harvest(gauge);
         uint256 _crv = IERC20(crv).balanceOf(address(this));
         if (_crv > 0) {
-            uint256 _keepCRV = _crv.mul(keepCRV).div(FEE_DENOMINATOR);
+            uint256 _keepCRV = _crv.mul(keepCRV).div(DENOMINATOR);
             IERC20(crv).safeTransfer(voter, _keepCRV);
             _crv = _crv.sub(_keepCRV);
 

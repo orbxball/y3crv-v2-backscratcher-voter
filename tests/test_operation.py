@@ -28,6 +28,7 @@ def test_operation(web3, chain, vault, strategy, token, whale, gov, strategist, 
 
     print(f"\n >>> wait 1 day")
     chain.sleep(86400)
+    chain.mine(1)
 
     print(f"\n >>> harvest to realized profit")
     strategy.harvest()
@@ -38,6 +39,7 @@ def test_operation(web3, chain, vault, strategy, token, whale, gov, strategist, 
 
     print(f"\n >>> wait 1 day to get the share price back")
     chain.sleep(86400)
+    chain.mine(1)
     state_of_vault(vault, token)
 
     # withdraw

@@ -237,8 +237,6 @@ contract Strategy is CurveVoterProxy {
             uint256 _debtPayment
         )
     {
-        // default tokens: weth, wbtc, dai
-        // can add tokens here if needed
         IVoterProxy(proxy).harvest(gauge);
         uint256 _crv = IERC20(crv).balanceOf(address(this));
         if (_crv > 0) {

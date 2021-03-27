@@ -74,7 +74,7 @@ def strategy(accounts, strategist, keeper, vault, Strategy, gov, token):
     ctrl = Contract('0x9E65Ad11b299CA0Abefc2799dDB6314Ef2d91080', owner=gov)
     old_strategy = Contract(ctrl.strategies(token), owner=gov)
     old_vault = Contract(ctrl.vaults(token), owner=gov)
-    # old_strategy.harvest()
+    old_strategy.harvest()
 
     # remove the old strategy from gauge
     data = vault.withdraw.encode_input(gauge.balanceOf(voter)) # just use the vault interface
@@ -86,24 +86,22 @@ def strategy(accounts, strategist, keeper, vault, Strategy, gov, token):
     assert token.balanceOf(voter) == 0
     assert gauge.balanceOf(voter) == 0
 
-    # clear mintr
-    mintr = Contract(proxy.mintr())
-    data = mintr.mint.encode_input(gauge)
-    voter.execute(mintr, 0, data)
+    # # clear mintr
+    # mintr = Contract(proxy.mintr())
+    # data = mintr.mint.encode_input(gauge)
+    # voter.execute(mintr, 0, data)
 
-    # sent to strategy
-    crv = Contract('0xD533a949740bb3306d119CC777fa900bA034cd52')
-    data = token.transfer.encode_input(strategy, token.balanceOf(voter))
-    voter.execute(crv, 0, data)
+    # # sent to strategy
+    # crv = Contract('0xD533a949740bb3306d119CC777fa900bA034cd52')
+    # data = token.transfer.encode_input(strategy, token.balanceOf(voter))
+    # voter.execute(crv, 0, data)
 
     # change current strategy proxy
     mock_proxy = '0x96Dd07B6c99b22F3f0cB1836aFF8530a98BDe9E3'
-    old_strategy.setProxy(mock_proxy) # arbitrary proxy address
+    old_strategy.setProxy(mock_proxy)
+    old_strategy.setKeepCRV(0)
 
     # proxy add
-    # proxy = Contract("0x96Dd07B6c99b22F3f0cB1836aFF8530a98BDe9E3")
-    # governance = proxy.governance()
-    # proxy.approveStrategy(gauge, strategy, {'from': governance})
     proxy.approveStrategy(gauge, strategy)
 
     yield strategy

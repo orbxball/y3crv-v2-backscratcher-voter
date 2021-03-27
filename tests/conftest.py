@@ -97,9 +97,11 @@ def strategy(accounts, strategist, keeper, vault, Strategy, gov, token):
     # voter.execute(crv, 0, data)
 
     # change current strategy proxy
-    mock_proxy = '0x96Dd07B6c99b22F3f0cB1836aFF8530a98BDe9E3'
+    mock_proxy = Contract('0x96Dd07B6c99b22F3f0cB1836aFF8530a98BDe9E3')
     old_strategy.setProxy(mock_proxy)
     old_strategy.setKeepCRV(0)
+    governance = mock_proxy.governance()
+    mock_proxy.approveStrategy(gauge, old_strategy, {"from": governance})
 
     # proxy add
     proxy.approveStrategy(gauge, strategy)
